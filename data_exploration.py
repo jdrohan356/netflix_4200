@@ -18,15 +18,12 @@ def calc_complexity(string):
 
 
 
-
-
 def main():
 
     netflix_df = pd.read_csv(filename)
     netflix_df.set_index('show_id', inplace=True)
     netflix_df.dropna(inplace=True)
     netflix_df = netflix_df[(netflix_df['country'] == 'United States') & (netflix_df['type'] == 'Movie')]
-    netflix_df.drop(columns=['country', 'type'], inplace=True)
 
     netflix_df['duration'] = list(map(lambda x: x.split()[0], netflix_df['duration']))
     netflix_df['date_added'] = list(map(lambda x: datetime.strptime(x, '%B %d, %Y').date(),
@@ -34,14 +31,17 @@ def main():
 
     netflix_df['complexity'] = list(map(calc_complexity, netflix_df['description']))
 
-    print(netflix_df)
+    categories = [row.split(',') for row in list(netflix_df['listed_in'])]
+    all_categories = sum(categories, [])
+    unique_categories = set([cat[1:] if cat[0] == ' ' else cat for cat in all_categories])
 
+    for category in list(unique_categories):
+        encoding = list(map(lambda x: 1 if category in x else 0, netflix_df['listed_in']))
+        netflix_df[category] = encoding
 
+    netflix_df.drop(columns=['country', 'type', 'description', 'listed_in'], inplace=True)
 
-
-
-
-
+    netflix_df.to_csv('finished.csv')
 
 
 
